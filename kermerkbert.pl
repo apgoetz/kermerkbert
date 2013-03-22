@@ -18,14 +18,40 @@ sub said {
     my $self = shift;
     my $message = shift;
     if($message->{address} and $message->{who} !~ /nickserv/i) {
-    print "someone tried to talk to us: ".$message->{who}."\n";
-    $self->emote(channel => $self->{args}->{channel}, body => "rages: shut up!");
+	if($message->{body} =~ /^\s*add\s+(\w+)\s*$/i) {
+	    $self->{accounts}->{$1} = $message->{who};
+	    return "Added account $1";
+	} elsif ($message->{body} =~ /^\s*delete\s+(\w+)\s*$/i){
+	    unless (exists $self->{accounts}->{$1}) {
+		return "Not following $1";
+	    } elsif ($self->{accounts}->{$1} eq $message->{who}) {
+		delete $self->{accounts}->{$1};
+		return "Account $1 deleted";
+	    } else {
+		return "Error, unauthorized to delete account $1.";
+	    }
+	} elsif ($message->{body} =~ /list/i){
+	    my $msg = "is following";
+	    if (scalar keys %{$self->{accounts}} > 0) {
+		foreach (keys %{$self->{accounts}}) {
+		    $msg .= " $_,";
+	    }
+		chop $msg;
+	    } else {
+		$msg .= " nobody. Use kermerkbert add <username>";
+	    }
+	     return $msg;
+	} else {
+	    return "kermerkbert thinks you should shut the fuck up."
+	}
+	print "someone tried to talk to us: ".$message->{who}."\n";
     }
+    return undef;
 }
 
 sub tick {
     print "tick called \n";
-    return 5;
+    return 0;
 }
 
 sub help {
@@ -49,11 +75,12 @@ sub parseargs {
     return \%arghash;
 }
 my $args = parseargs;
-
+my %accounts;
 my $bot = Bot->new(channels => [$args->{channel}],
-			     server => $args->{server},
-			     nick => $args->{nick},
-			     name => $args->{nick},
-			     ssl => 1,
-			     port => 6697,
-			     args => $args)->run();
+		   server => $args->{server},
+		   nick => $args->{nick},
+		   name => $args->{nick},
+		   ssl => 1,
+		   port => 6697,
+		   args => $args,
+		   accounts => \%accounts)->run();
