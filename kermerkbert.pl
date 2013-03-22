@@ -38,11 +38,12 @@ sub said {
 	    }
 		chop $msg;
 	    } else {
-		$msg .= " nobody. Use kermerkbert add <username>";
+		$msg .= " nobody. Use ".$self->{args}->{nick}.": add <username>";
 	    }
 	     return $msg;
 	} else {
-	    return "kermerkbert thinks you should shut the fuck up."
+	    $self->emote(body =>" thinks you should shert the ferk erp.",
+		channel => $message->{channel});
 	}
 	print "someone tried to talk to us: ".$message->{who}."\n";
     }
